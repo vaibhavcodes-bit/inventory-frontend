@@ -3,127 +3,55 @@ import { Typography, message } from "antd";
 
 import api from "../services/api";
 
+import AppLayout from "../components/Layout";
 import OrderForm from "../components/OrderForm";
 import OrderTable from "../components/OrderTable";
-import AppLayout from "../components/Layout";
 
 const { Title, Text } = Typography;
 
 function Orders() {
-  const [orders, setOrders] =
-    useState([]);
+  const [orders, setOrders] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [products, setProducts] = useState([]);
 
-  const [editingOrder,
-    setEditingOrder] =
-    useState(null);
-
-  // ==========================
-  // GET ORDERS
-  // ==========================
-  const fetchOrders = async () => {
+  const fetchData = async () => {
     try {
-      const response =
-        await api.get("/orders/");
+      const [ordersRes, customersRes, productsRes] =
+        await Promise.all([
+          api.get("/orders/"),
+          api.get("/customers/"),
+          api.get("/products/"),
+        ]);
 
-      setOrders(response.data);
+      setOrders(ordersRes.data);
+      setCustomers(customersRes.data);
+      setProducts(productsRes.data);
     } catch (error) {
       console.log(error);
-
-      message.error(
-        "Failed to load orders"
-      );
+      message.error("Failed to load data");
     }
   };
 
-  // ==========================
-  // CREATE / UPDATE
-  // ==========================
-  const handleSubmitOrder =
-    async (values) => {
-      try {
-        if (editingOrder) {
-          await api.put(
-            `/orders/${editingOrder.id}`,
-            {
-              customer_id:
-                values.customer_id,
-              quantity:
-                values.quantity,
-            }
-          );
+  const handleCreateOrder = async (values) => {
+    try {
+      await api.post("/orders/", values);
 
-          message.success(
-            "Order updated successfully"
-          );
+      message.success("Order created successfully");
 
-          setEditingOrder(null);
-        } else {
-          await api.post(
-            "/orders/",
-            values
-          );
+      fetchData();
+    } catch (error) {
+      console.log(error);
 
-          message.success(
-            "Order created successfully"
-          );
-        }
-
-        fetchOrders();
-      } catch (error) {
-        console.log(error);
-
-        if (
-          error.response?.data?.detail
-        ) {
-          message.error(
-            error.response.data.detail
-          );
-        } else {
-          message.error(
-            "Operation failed"
-          );
-        }
+      if (error.response?.data?.detail) {
+        message.error(error.response.data.detail);
+      } else {
+        message.error("Failed to create order");
       }
-    };
-
-  // ==========================
-  // EDIT
-  // ==========================
-  const handleEdit = (order) => {
-    setEditingOrder(order);
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    }
   };
 
-  // ==========================
-  // DELETE
-  // ==========================
-  const handleDelete =
-    async (orderId) => {
-      try {
-        await api.delete(
-          `/orders/${orderId}`
-        );
-
-        message.success(
-          "Order deleted successfully"
-        );
-
-        fetchOrders();
-      } catch (error) {
-        console.log(error);
-
-        message.error(
-          "Delete failed"
-        );
-      }
-    };
-
   useEffect(() => {
-    fetchOrders();
+    fetchData();
   }, []);
 
   return (
@@ -139,23 +67,19 @@ function Orders() {
           marginBottom: 20,
         }}
       >
-        Manage orders and
-        inventory tracking.
+        Manage orders and inventory tracking.
       </Text>
 
       <OrderForm
-        onSubmit={
-          handleSubmitOrder
-        }
-        editingOrder={
-          editingOrder
-        }
+        customers={customers}
+        products={products}
+        onSubmit={handleCreateOrder}
       />
 
       <OrderTable
         orders={orders}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        customers={customers}
+        products={products}
       />
     </AppLayout>
   );

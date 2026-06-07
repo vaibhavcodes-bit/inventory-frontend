@@ -1,44 +1,29 @@
 import {
   Card,
   Form,
-  InputNumber,
   Button,
   Row,
   Col,
+  Select,
+  InputNumber,
 } from "antd";
-import { useEffect } from "react";
 
 function OrderForm({
+  customers,
+  products,
   onSubmit,
-  editingOrder,
 }) {
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    if (editingOrder) {
-      form.setFieldsValue(editingOrder);
-    }
-  }, [editingOrder, form]);
-
   const handleFinish = async (values) => {
-    try {
-      await onSubmit(values);
+    await onSubmit(values);
 
-      if (!editingOrder) {
-        form.resetFields();
-      }
-    } catch (error) {
-      console.log(error);
-    }
+    form.resetFields();
   };
 
   return (
     <Card
-      title={
-        editingOrder
-          ? "Edit Order"
-          : "Create Order"
-      }
+      title="Create Order"
       style={{
         marginBottom: 24,
       }}
@@ -51,55 +36,58 @@ function OrderForm({
         <Row gutter={16}>
           <Col span={8}>
             <Form.Item
-              label="Customer ID"
+              label="Customer"
               name="customer_id"
               rules={[
                 {
                   required: true,
-                  message:
-                    "Customer ID required",
+                  message: "Select customer",
                 },
               ]}
             >
-              <InputNumber
-                style={{
-                  width: "100%",
-                }}
+              <Select
+                placeholder="Select Customer"
+                options={customers.map(
+                  (customer) => ({
+                    value: customer.id,
+                    label: customer.name,
+                  })
+                )}
               />
             </Form.Item>
           </Col>
 
-          {!editingOrder && (
-            <Col span={8}>
-              <Form.Item
-                label="Product ID"
-                name="product_id"
-                rules={[
-                  {
-                    required: true,
-                    message:
-                      "Product ID required",
-                  },
-                ]}
-              >
-                <InputNumber
-                  style={{
-                    width: "100%",
-                  }}
-                />
-              </Form.Item>
-            </Col>
-          )}
-
           <Col span={8}>
+            <Form.Item
+              label="Product"
+              name="product_id"
+              rules={[
+                {
+                  required: true,
+                  message: "Select product",
+                },
+              ]}
+            >
+              <Select
+                placeholder="Select Product"
+                options={products.map(
+                  (product) => ({
+                    value: product.id,
+                    label: `${product.name} (Stock: ${product.stock})`,
+                  })
+                )}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col span={4}>
             <Form.Item
               label="Quantity"
               name="quantity"
               rules={[
                 {
                   required: true,
-                  message:
-                    "Quantity required",
+                  message: "Quantity required",
                 },
               ]}
             >
@@ -111,16 +99,20 @@ function OrderForm({
               />
             </Form.Item>
           </Col>
-        </Row>
 
-        <Button
-          type="primary"
-          htmlType="submit"
-        >
-          {editingOrder
-            ? "Update Order"
-            : "Create Order"}
-        </Button>
+          <Col span={4}>
+            <Form.Item label=" ">
+              <Button
+                type="primary"
+                htmlType="submit"
+                block
+                size="large"
+              >
+                Create Order
+              </Button>
+            </Form.Item>
+          </Col>
+        </Row>
       </Form>
     </Card>
   );

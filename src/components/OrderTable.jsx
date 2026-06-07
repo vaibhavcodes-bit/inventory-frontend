@@ -2,36 +2,51 @@ import {
   Table,
   Button,
   Space,
-  Popconfirm,
-  Tag,
 } from "antd";
 
 function OrderTable({
   orders,
-  onEdit,
-  onDelete,
+  customers,
+  products,
 }) {
+  const getCustomerName = (id) => {
+    const customer = customers.find(
+      (c) => c.id === id
+    );
+
+    return customer?.name || "Unknown";
+  };
+
+  const getProductName = (id) => {
+    const product = products.find(
+      (p) => p.id === id
+    );
+
+    return product?.name || "Unknown";
+  };
+
   const columns = [
     {
       title: "Order ID",
       dataIndex: "id",
     },
     {
-      title: "Customer ID",
-      dataIndex: "customer_id",
+      title: "Customer",
+      render: (_, record) =>
+        getCustomerName(
+          record.customer_id
+        ),
     },
     {
-      title: "Product ID",
-      dataIndex: "product_id",
+      title: "Product",
+      render: (_, record) =>
+        getProductName(
+          record.product_id
+        ),
     },
     {
       title: "Quantity",
       dataIndex: "quantity",
-      render: (qty) => (
-        <Tag color="blue">
-          {qty}
-        </Tag>
-      ),
     },
     {
       title: "Total Amount",
@@ -41,27 +56,15 @@ function OrderTable({
     },
     {
       title: "Actions",
-      render: (_, record) => (
+      render: () => (
         <Space>
-          <Button
-            type="primary"
-            onClick={() =>
-              onEdit(record)
-            }
-          >
+          <Button type="primary">
             Edit
           </Button>
 
-          <Popconfirm
-            title="Delete Order?"
-            onConfirm={() =>
-              onDelete(record.id)
-            }
-          >
-            <Button danger>
-              Delete
-            </Button>
-          </Popconfirm>
+          <Button danger>
+            Delete
+          </Button>
         </Space>
       ),
     },
